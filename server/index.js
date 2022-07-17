@@ -9,7 +9,7 @@ app.use(express.json());
 const db = mysql.createConnection({
     user: 'root',
     host: 'localhost',
-    password: 'take327624.nao',
+    password: 'password',
     database: 'vocablarydb',
 });
 
@@ -43,6 +43,36 @@ app.get("/vocablaries", (req, res) => {
             }
         }
     )
+})
+
+app.delete("/delete/:id", (req, res) => {
+    const id = req.params.id;
+    db.query("DELETE FROM vocablaries WHERE id = ?", id,
+    (err, result) => {
+        if(err) {
+            console.log(err)
+        }else{
+            res.send(result)
+        }
+    });
+});
+
+app.put("/update", (req, res) => {
+    const id = req.body.id;
+    const sentword = req.body.word;
+    const sentmeaning = req.body.meaning;
+    console.log("put* ",id,sentword,sentmeaning)
+    db.query(
+        "UPDATE vocablaries SET word_name = ?, word_definition = ? WHERE id = ?",
+        [sentword, sentmeaning, id],
+        (err, result) => {
+            if(err) {
+                console.log(err);
+            }else{
+                res.send(result);
+            }
+        }
+        )
 })
 
 app.listen(3001, () => {

@@ -1,73 +1,117 @@
-import { useState, useEffect } from "react";
+import "./App.css";
+import { useState, useEffect, useCallback } from "react";
 import  Axios  from "axios";
-import axios from "axios";
+//import { useSpeechSynthesis } from "react-speech-kit";
 export const App = () => {
+
 
   const [inputWord, setInputWord] = useState("");
   const [inputMeaning, setInputMeaning] = useState("");
   const [wordList , setWordList] = useState([]); 
-  const [isChangable, setIsChangable] = useState(true);
+  const [isBeingEdited, setIsBeingEdited] = useState(false)
+  const [newWord, setNewWord] = useState("");
+  const [newMeaning, setNewMeaning] = useState("");
+//  const {speak} = useSpeechSynthesis();
+
+  const queryVocabs = useCallback(() => {
+    Axios.get("http://localhost:3001/vocablaries").then((response) => {
+      setWordList(response.data);
+    })
+  }, [])
 
   const onClickAdd = () => {
-    console.log(inputMeaning);
-    console.log(inputWord);
-    
-
-    Axios.post('http://localhost:3001/create', {
+    if(inputMeaning === "" || inputWord === "") return;
+    else{
+        Axios.post('http://localhost:3001/create', {
       //key: variable to pass
       inputWord: inputWord,
       inputMeaning: inputMeaning,
-    }).then(() => {
-      console.log("success!!")
+    }).then((response) => {
+      if(response.status === 200) queryVocabs()
     })
-
-    if(inputMeaning === "" || inputWord === "") return;
-    else{
-      wordList.push({inputWord, inputMeaning});
     }
-    console.log(wordList);
-    
     setInputWord("");
     setInputMeaning("");
   }
 
   useEffect(() => {
     console.log('state updated')
-  }, [wordList])
-
-  useEffect(() => {
-    Axios.get("http://localhost:3001/vocablaries").then((response) => {
-      setWordList(response.data);
-      console.log(response.data);
-      console.log(response);
-      console.log(wordList);
-      console.log(inputWord);
-      console.log(inputMeaning);
-    })
   }, [])
 
-  const onClickEdit = () => {
-    setIsChangable(false);
-    console.log(isChangable);
+  useEffect(() => {
+    queryVocabs()
+  }, [])
+
+  // const onClickHandle = (e) => {
+  //   speak({word: e.word_name});
+  // }
+
+  const onClickEdit = (id) => {
+
+    // setNewWord();
+    // setNewMeaning()
+
+    console.log(wordList);
+    console.log(newWord);
+
+    setIsBeingEdited(true);
+    console.log(isBeingEdited);
+
+
+      setWordList(prev => prev.filter((val) => {
+        console.log(val.id,val.id === id);
+        
+        return val.id === id;}))
+        console.log(wordList)
+        setNewWord();
+        setNewMeaning();
+
+        console.log(wordList.id);
+
+    //    wordList.map((val) =>{
+    //     if(val.id === id) {
+    //       return `
+    //     <input value={el.word_definition || el.inputMeaning} type="text"/>
+    //     <button className="update-button" onClick={onClickEdit}>update</button>
+    //     `
+    //     }
+      
+    // })
   }
 
-  const onClickDelete = (e) => {
-    let targetId = e.target.parentNode.id;
-    let targetIndex = null;
+  const onClickUpdate = (id) => {
+    queryVocabs();
+    setIsBeingEdited(false);
+    console.log(isBeingEdited);
+    console.log("before put")
 
-    //identify the index of target element
-    wordList.forEach((item, index) => {
-    console.log(targetId);
-    console.log(item.inputWord);
-    if(item.inputWord === targetId) targetIndex = index;
+    console.log(newWord)
+    console.log(newMeaning)
+
+      Axios.put("http://localhost:3001/update", { word: newWord,meaning: newMeaning, id: id })
+      .then(
+        (response) => {
+          console.log(response);
+        }
+      )
+      .catch(error => {
+        console.log(error);
+      })
+
+    queryVocabs();
+      
+    }
+
+  const onClickDelete = (id) => {
+    Axios.delete(`http://localhost:3001/delete/${id}`).then((response) => {
+      console.log(response);
+      
+    setWordList(prev => prev.filter((val) => {
+        return val.id !== id;
+      }))
     })
 
-    
-    let copy = wordList;
-    copy.splice(targetIndex, 1);
-    console.log('targetIndex',targetIndex);
-    setWordList([...copy]);
-    console.log(copy);
+
   }
 
   const onChangeWords = (e) => {
@@ -78,26 +122,47 @@ export const App = () => {
     return setInputMeaning(e.target.value);
   }
 
+  const onChangeNewWords = (e) => {
+    setNewWord(e.target.value);
+    console.log(newWord);
+    
+    return setNewWord(e.target.value);
+  }
+
+  const onChangeNewMeaning = (e) => {
+    setNewMeaning(e.target.value);
+    console.log(newMeaning);
+    return setNewMeaning(e.target.value);
+  }
+
+
+
   return (
     <>
-    <div style={{width: "100%", height: "100%", backgroundColor: "#B9F2B4", minHeight: "1000px"}}>
-      <div className="form-wrapper" style={{display: "flex", flexDirection: "column" ,alignItems: "center"}}>
-        <h1 style={{textAlign: "center"}}>Add the word and the meaning</h1>
-        <form style={{display: "flex", flexDirection: "column"}}>
-          <input onChange={onChangeWords} value={inputWord} style={{height: "50px", width: "210px", borderRadius: "8px"}} placeholder= "Word"type="text" />
-          <input onChange={onChangeMeaning} value={inputMeaning} style={{height: "50px", width: "210px", borderRadius: "8px"}} placeholder="Meaning" type="text" />
+    <div className="container">
+      <div className="form-wrapper">
+        <h1>Add the word and the meaning</h1>
+        <form>
+          <input onChange={onChangeWords} value={inputWord} placeholder= "Word"type="text" />
+          <input onChange={onChangeMeaning} value={inputMeaning} placeholder="Meaning" type="text" />
         </form>
-        <button style={{color: "White", backgroundColor: "#22D0B1", width: "100px", height: "40px" ,borderRadius: "8px"}} onClick={onClickAdd}>add</button>
+        <button onClick={onClickAdd}>add</button>
       </div>
-      <div className="wordList">
+      <div className="wordList-wrapper">
         <ul>
           {wordList.map((el, index) => {
             return(
-              <li id={el.inputWord} key={'key: '+ el.inputWord}>
-                <input value={el.word_definition} type="text" readOnly={isChangable} style={{width: "210px", height: "50px", borderRadius: "8px"}}/>
-                <input value={el.inputMeaning} type="text" readOnly={isChangable} style={{width: "210px", height: "50px", borderRadius: "8px"}} />
-                <button style={{color: "White", backgroundColor: "#22D0B1", width: "100px", height: "40px" ,borderRadius: "8px"}} onClick={onClickEdit}>edit</button>
-                <button style={{color: "White", backgroundColor: "#22D0B1", width: "100px", height: "40px" ,borderRadius: "8px"}} id={index} onClick={onClickDelete}>delete</button>
+              <li id={el.id} key={'key: '+ el.id}>
+                {/* <input value={el.word_name || el.inputWord} type="text"/>
+                <input value={el.word_definition || el.inputMeaning} type="text"/> */}
+                {!isBeingEdited &&  <span>{el.word_name || el.inputWord}</span>}
+                {!isBeingEdited &&  <span>{el.word_definition || el.inputMeaning}</span>}
+                {!isBeingEdited && <button className="edit-button" onClick={()=>onClickEdit(el.id)}>edit</button>}
+                {!isBeingEdited && <button onClick={()=>onClickDelete(el.id)} id={index}>delete</button>}
+                {/* <button className="update-button" onClick={onClickEdit}>update</button> */}
+                {isBeingEdited &&  <input onChange={onChangeNewWords} value={(newWord === undefined) ? el.word_name : newWord} type="text"/>}
+                {isBeingEdited &&  <input onChange={onChangeNewMeaning} value={newMeaning || el.word_definition} type="text"/>}
+                {isBeingEdited &&  <button className="update-button" onClick={()=>onClickUpdate(el.id)}>update</button>} 
               </li>
             )
           })}
@@ -109,3 +174,5 @@ export const App = () => {
 }
 
 export default App;
+// el.word_name || el.inputWord
+// el.word_definition || el.inputMeaning
