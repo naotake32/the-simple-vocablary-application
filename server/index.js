@@ -18,6 +18,10 @@ app.post("/create", (req, res) => {
     const sentword = req.body.inputWord;
     const sentmeaning = req.body.inputMeaning;
 
+    console.log("create word",sentword)
+    console.log("create word",sentmeaning)
+
+
     db.query(
         //It has to be an actual column name
         "INSERT INTO vocablaries (word_name, word_definition) VALUES (?, ?)",

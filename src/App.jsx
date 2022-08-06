@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import  Axios  from "axios";
 import WordCard from "./components/WordCard";
 
-//import { useSpeechSynthesis } from "react-speech-kit";
+
 export const App = () => {
 
 
@@ -11,7 +11,6 @@ export const App = () => {
   const [inputMeaning, setInputMeaning] = useState("");
   const [wordList , setWordList] = useState([]); 
 
-//  const {speak} = useSpeechSynthesis();
 
   const queryVocabs = useCallback(() => {
     Axios.get("http://localhost:3001/vocablaries").then((response) => {
@@ -19,14 +18,12 @@ export const App = () => {
     })
   }, [])
 
-   
-  const refreshPage = ()=>{
-    window.location.reload();
- }
 
   const onClickAdd = () => {
+    console.log("add")
     if(inputMeaning === "" || inputWord === "") return;
     else{
+      console.log("create!!!!!!!!!!!!!!!!!!!!!!")
         Axios.post('http://localhost:3001/create', {
       //key: variable to pass
       inputWord: inputWord,
@@ -71,7 +68,7 @@ export const App = () => {
       <div className="form-wrapper">
         <h1>Add the word and the meaning</h1>
         <form>
-          <input onChange={onChangeWords} value={inputWord} placeholder= "Word"type="text" />
+          <input onChange={onChangeWords} value={inputWord} placeholder= "Word" type="text" />
           <input onChange={onChangeMeaning} value={inputMeaning} placeholder="Meaning" type="text" />
         </form>
         <button onClick={onClickAdd}>add</button>
@@ -84,11 +81,10 @@ export const App = () => {
               el={el} 
               editedWord={el.word_name}
               editedDef={el.word_definition}
-              key={index} 
+              key={el.word_name} 
               queryVocabs={queryVocabs}  
               wordList={wordList} 
-              setWordList={setWordList}
-              refreshPage={refreshPage}/>
+              setWordList={setWordList}/>
             )
           })}
         </ul>
